@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi import HTTPException
+from pydantic import BaseModel
 app = FastAPI()
 employees = [
     {
@@ -34,6 +35,26 @@ def get_employee(employee_id):
         status_code=404,
         detail="Employee Not Found"
     )
+
+
+class EmployeeCreate(BaseModel):
+    employee_id: str
+    name: str
+    age: int
+    qualification: str
+    salary: float
+
+
+@app.post("/employees", status_code=201)
+def create_employee(employee: EmployeeCreate):
+    for existing_employee in employees:
+        if existing_employee["employee_id"] == employee.employee_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Employee ID already exists"
+            )
+    employees.append(employee.model_dump())
+    return employee.model_dump()
 
 
 @app.get("/")
